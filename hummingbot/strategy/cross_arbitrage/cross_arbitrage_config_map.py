@@ -1,65 +1,27 @@
-import hummingbot.client.settings as settings
+from decimal import Decimal
+from functools import partial
+from typing import Optional
 
 from hummingbot.client.config.config_var import ConfigVar
 from hummingbot.client.config.config_validators import (
     validate_exchange,
     validate_market_trading_pair,
     validate_decimal,
-    validate_bool
 )
-from hummingbot.client.config.config_helpers import parse_cvar_value
 from hummingbot.client.settings import AllConnectorSettings, required_exchanges
-from decimal import Decimal
-from typing import Optional
 
 
-def validate_primary_market_trading_pair(value: str) -> Optional[str]:
-    primary_market = cross_arbitrage_config_map.get("primary_market").value
-    return validate_market_trading_pair(primary_market, value)
+
+def validate_trading_pair(market_idx: int, value: str) -> Optional[str]:
+    market = cross_arbitrage_config_map.get(f"market_{market_idx}").value
+    return validate_market_trading_pair(market, value)
 
 
-def validate_secondary_market_trading_pair(value: str) -> Optional[str]:
-    secondary_market = cross_arbitrage_config_map.get("secondary_market").value
-    return validate_market_trading_pair(secondary_market, value)
-
-
-def primary_trading_pair_prompt():
-    primary_market = cross_arbitrage_config_map.get("primary_market").value
-    example = AllConnectorSettings.get_example_pairs().get(primary_market)
+def trading_pair_prompt(market_idx: int):
+    market = cross_arbitrage_config_map.get(f"market_{market_idx}").value
+    example = AllConnectorSettings.get_example_pairs().get(market)
     return "Enter the token trading pair you would like to trade on %s%s >>> " \
-           % (primary_market, f" (e.g. {example})" if example else "")
-
-
-def secondary_trading_pair_prompt():
-    secondary_market = cross_arbitrage_config_map.get("secondary_market").value
-    example = AllConnectorSettings.get_example_pairs().get(secondary_market)
-    return "Enter the token trading pair you would like to trade on %s%s >>> " \
-           % (secondary_market, f" (e.g. {example})" if example else "")
-
-
-def secondary_market_on_validated(value: str):
-    required_exchanges.append(value)
-
-
-def update_oracle_settings(value: str):
-    c_map = cross_arbitrage_config_map
-    if not (c_map["use_oracle_conversion_rate"].value is not None and
-            c_map["primary_market_trading_pair"].value is not None and
-            c_map["secondary_market_trading_pair"].value is not None):
-        return
-    use_oracle = parse_cvar_value(c_map["use_oracle_conversion_rate"], c_map["use_oracle_conversion_rate"].value)
-    first_base, first_quote = c_map["primary_market_trading_pair"].value.split("-")
-    second_base, second_quote = c_map["secondary_market_trading_pair"].value.split("-")
-    if use_oracle and (first_base != second_base or first_quote != second_quote):
-        settings.required_rate_oracle = True
-        settings.rate_oracle_pairs = []
-        if first_base != second_base:
-            settings.rate_oracle_pairs.append(f"{second_base}-{first_base}")
-        if first_quote != second_quote:
-            settings.rate_oracle_pairs.append(f"{second_quote}-{first_quote}")
-    else:
-        settings.required_rate_oracle = False
-        settings.rate_oracle_pairs = []
+           % (market, f" (e.g. {example})" if example else "")
 
 
 cross_arbitrage_config_map = {
@@ -68,33 +30,76 @@ cross_arbitrage_config_map = {
         prompt="",
         default="cross_arbitrage"
     ),
-    "primary_market": ConfigVar(
-        key="primary_market",
-        prompt="Enter your primary spot connector >>> ",
+    "market_1": ConfigVar(
+        key="market_1",
+        prompt="Enter your 1-st spot connector >>> ",
         prompt_on_new=True,
         validator=validate_exchange,
-        on_validated=lambda value: required_exchanges.append(value),
+        on_validated=required_exchanges.append,
     ),
-    "secondary_market": ConfigVar(
-        key="secondary_market",
-        prompt="Enter your secondary spot connector >>> ",
+    "market_2": ConfigVar(
+        key="market_2",
+        prompt="Enter your 2-nd spot connector >>> ",
         prompt_on_new=True,
         validator=validate_exchange,
-        on_validated=secondary_market_on_validated,
+        on_validated=required_exchanges.append,
     ),
-    "primary_market_trading_pair": ConfigVar(
-        key="primary_market_trading_pair",
-        prompt=primary_trading_pair_prompt,
-        prompt_on_new=True,
-        validator=validate_primary_market_trading_pair,
-        on_validated=update_oracle_settings,
+    "market_3": ConfigVar(
+        key="market_3",
+        prompt="Enter your 3-nd spot connector >>> ",
+        prompt_on_new=False,
+        required_if=lambda: False,
+        validator=validate_exchange,
+        on_validated=required_exchanges.append,
     ),
-    "secondary_market_trading_pair": ConfigVar(
-        key="secondary_market_trading_pair",
-        prompt=secondary_trading_pair_prompt,
+    "market_4": ConfigVar(
+        key="market_4",
+        prompt="Enter your 4-th spot connector >>> ",
+        prompt_on_new=False,
+        required_if=lambda: False,
+        validator=validate_exchange,
+        on_validated=required_exchanges.append,
+    ),
+    "market_5": ConfigVar(
+        key="market_5",
+        prompt="Enter your 5-th spot connector >>> ",
+        prompt_on_new=False,
+        required_if=lambda: False,
+        validator=validate_exchange,
+        on_validated=required_exchanges.append,
+    ),
+    "market_1_trading_pair": ConfigVar(
+        key="market_1_trading_pair",
+        prompt=trading_pair_prompt,
         prompt_on_new=True,
-        validator=validate_secondary_market_trading_pair,
-        on_validated=update_oracle_settings,
+        validator=partial(validate_trading_pair, 1),
+    ),
+    "market_2_trading_pair": ConfigVar(
+        key="market_2_trading_pair",
+        prompt=trading_pair_prompt,
+        prompt_on_new=True,
+        validator=partial(validate_trading_pair, 2),
+    ),
+    "market_3_trading_pair": ConfigVar(
+        key="market_3_trading_pair",
+        prompt=trading_pair_prompt,
+        prompt_on_new=True,
+        required_if=lambda: False,
+        validator=partial(validate_trading_pair, 3),
+    ),
+    "market_4_trading_pair": ConfigVar(
+        key="market_4_trading_pair",
+        prompt=trading_pair_prompt,
+        prompt_on_new=True,
+        required_if=lambda: False,
+        validator=partial(validate_trading_pair, 4),
+    ),
+    "market_5_trading_pair": ConfigVar(
+        key="market_5_trading_pair",
+        prompt=trading_pair_prompt,
+        prompt_on_new=True,
+        required_if=lambda: False,
+        validator=partial(validate_trading_pair, 5),
     ),
     "min_profitability": ConfigVar(
         key="min_profitability",
@@ -102,32 +107,6 @@ cross_arbitrage_config_map = {
         prompt_on_new=True,
         default=Decimal("0.3"),
         validator=lambda v: validate_decimal(v, Decimal(-100), Decimal("100"), inclusive=True),
-        type_str="decimal",
-    ),
-    "use_oracle_conversion_rate": ConfigVar(
-        key="use_oracle_conversion_rate",
-        type_str="bool",
-        prompt="Do you want to use rate oracle on unmatched trading pairs? (Yes/No) >>> ",
-        prompt_on_new=True,
-        validator=lambda v: validate_bool(v),
-        on_validated=update_oracle_settings,
-    ),
-    "secondary_to_primary_base_conversion_rate": ConfigVar(
-        key="secondary_to_primary_base_conversion_rate",
-        prompt="Enter conversion rate for secondary base asset value to primary base asset value, e.g. "
-               "if primary base asset is USD and the secondary is DAI, 1 DAI is valued at 1.25 USD, "
-               "the conversion rate is 1.25 >>> ",
-        default=Decimal("1"),
-        validator=lambda v: validate_decimal(v, Decimal(0), inclusive=False),
-        type_str="decimal",
-    ),
-    "secondary_to_primary_quote_conversion_rate": ConfigVar(
-        key="secondary_to_primary_quote_conversion_rate",
-        prompt="Enter conversion rate for secondary quote asset value to primary quote asset value, e.g. "
-               "if primary quote asset is USD and the secondary is DAI and 1 DAI is valued at 1.25 USD, "
-               "the conversion rate is 1.25 >>> ",
-        default=Decimal("1"),
-        validator=lambda v: validate_decimal(v, Decimal(0), inclusive=False),
         type_str="decimal",
     ),
 }
