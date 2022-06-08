@@ -1,8 +1,8 @@
-from .cross_arbitrage_market_pair import CrossArbitrageMarketPair
+from .cross_arbitrage_markets import CrossArbitrageMarkets
 from .cross_arbitrage import CrossArbitrageStrategy
 
 
 __all__ = [
-    CrossArbitrageMarketPair,
+    CrossArbitrageMarkets,
     CrossArbitrageStrategy,
 ]

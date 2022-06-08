@@ -16,7 +16,7 @@ from hummingbot.core.data_type.order_book import OrderBook
 from hummingbot.core.network_iterator import NetworkStatus
 from hummingbot.strategy.strategy_base import StrategyBase
 from hummingbot.strategy.market_trading_pair_tuple import MarketTradingPairTuple
-from hummingbot.strategy.cross_arbitrage.cross_arbitrage_market_pair import CrossArbitrageMarketPair
+from hummingbot.strategy.cross_arbitrage.cross_arbitrage_markets import CrossArbitrageMarkets
 from hummingbot.core.rate_oracle.rate_oracle import RateOracle
 from hummingbot.client.performance import PerformanceMetrics
 
@@ -42,7 +42,7 @@ cdef class CrossArbitrageStrategy(StrategyBase):
         return as_logger
 
     def init_params(self,
-                    market_pairs: List[CrossArbitrageMarketPair],
+                    market_pairs: List[CrossArbitrageMarkets],
                     min_profitability: Decimal,
                     logging_options: int = OPTION_LOG_ORDER_COMPLETED,
                     status_report_interval: float = 60.0,

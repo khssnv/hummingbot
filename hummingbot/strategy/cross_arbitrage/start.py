@@ -4,7 +4,7 @@ from typing import (
 )
 from decimal import Decimal
 from hummingbot.strategy.market_trading_pair_tuple import MarketTradingPairTuple
-from hummingbot.strategy.cross_arbitrage.cross_arbitrage_market_pair import CrossArbitrageMarketPair
+from hummingbot.strategy.cross_arbitrage.cross_arbitrage_markets import CrossArbitrageMarkets
 from hummingbot.strategy.cross_arbitrage.cross_arbitrage import CrossArbitrageStrategy
 from hummingbot.strategy.cross_arbitrage.cross_arbitrage_config_map import cross_arbitrage_config_map
 
@@ -36,7 +36,7 @@ def start(self):
     primary_data = [self.markets[primary_market], primary_trading_pair] + list(primary_assets)
     secondary_data = [self.markets[secondary_market], secondary_trading_pair] + list(secondary_assets)
     self.market_trading_pair_tuples = [MarketTradingPairTuple(*primary_data), MarketTradingPairTuple(*secondary_data)]
-    self.market_pair = CrossArbitrageMarketPair(*self.market_trading_pair_tuples)
+    self.market_pair = CrossArbitrageMarkets(*self.market_trading_pair_tuples)
     self.strategy = CrossArbitrageStrategy()
     self.strategy.init_params(market_pairs=[self.market_pair],
                               min_profitability=min_profitability,
